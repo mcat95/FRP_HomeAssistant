@@ -7,19 +7,24 @@ local_ip=$(bashio::config 'local_ip')
 local_port=$(bashio::config 'local_port')
 remote_port=$(bashio::config 'remote_port')
 
-# Create FRP configuration file
-echo "[common]" > /etc/frpc.ini
-echo "server_addr = ${server_addr}" >> /etc/frpc.ini
-echo "server_port = ${server_port}" >> /etc/frpc.ini
-echo "token = ${token}" >> /etc/frpc.ini
+# Create FRP configuration file (TOML format, current frp syntax)
+cat > /etc/frpc.toml <<EOF
+serverAddr = "${server_addr}"
+serverPort = ${server_port}
 
-echo "[ha_dashboard]" >> /etc/frpc.ini
-echo "type = tcp" >> /etc/frpc.ini
-echo "local_ip = ${local_ip}" >> /etc/frpc.ini
-echo "local_port = ${local_port}" >> /etc/frpc.ini
-echo "remote_port = ${remote_port}" >> /etc/frpc.ini
+[auth]
+method = "token"
+token = "${token}"
 
-echo "--------------- FRP Configuration (frpc.ini): -----------------------"
-cat /etc/frpc.ini
-echo "Starting FRP Service..."
-/usr/local/bin/frpc -c /etc/frpc.ini
+[[proxies]]
+name = "homeassistant"
+type = "tcp"
+localIP = "${local_ip}"
+localPort = ${local_port}
+remotePort = ${remote_port}
+EOF
+
+# Never log the config/token (upstream used to `cat` it to the log).
+bashio::log.info "Connecting to ${server_addr}:${server_port}, forwarding ${local_ip}:${local_port} -> remote port ${remote_port}"
+
+exec /usr/local/bin/frpc -c /etc/frpc.toml

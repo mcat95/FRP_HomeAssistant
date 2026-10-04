@@ -1,10 +1,14 @@
 name: "FRP (Fast Reverse Proxy)"
 description: "Expose internal services (like Home Assistant) securely to the internet using FRP"
-version: "0.60.0"
+version: "0.71.0"
 slug: "frp"
 init: false
 arch:
   - amd64
+  - aarch64
+  - armv7
+  - armhf
+  - i386
 network:
   mode: host
 options:
@@ -18,7 +22,7 @@ options:
 schema:
   server_addr: str
   server_port: int
-  token: str
+  token: password
   local_ip: str
   local_port: int
   remote_port: int
